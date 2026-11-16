@@ -8,6 +8,7 @@ type View = "dashboard" | "loans" | "returns" | "inventory" | "categories" | "us
 type LoanInput = { borrowerId: number; toolId: number; qty: number; dueDate: string; purpose: string };
 type ReturnInput = { loanId: number; returnedAt: string; condition: string; note: string; intent: "request" | "confirm" };
 type ToolInput = { name: string; categoryId: number; stock: number; condition: string; code: string };
+type ToolUpdateInput = { id: number; name: string; categoryId: number; stock: number; condition: string; code: string };
 type UserInput = { name: string; email: string; role: Role };
 type Action<T> = (input: T) => void | Promise<void>;
 
@@ -20,10 +21,13 @@ export type PinjaminWorkspaceProps = {
   logs?: LogEntry[];
   demoMode?: boolean;
   onDemoRoleChange?: (role: Role) => void;
+  roleSwitcherMode?: "select" | "links";
   onCreateLoan: Action<LoanInput>;
   onDecideLoan: (loanId: number, status: Extract<LoanStatus, "approved" | "rejected">) => void | Promise<void>;
   onReturnLoan: Action<ReturnInput>;
   onCreateTool: Action<ToolInput>;
+  onUpdateTool?: Action<ToolUpdateInput>;
+  onDeleteTool?: (toolId: number) => void | Promise<void>;
   onCreateUser: Action<UserInput>;
 };
 
@@ -46,6 +50,7 @@ export default function PinjaminWorkspace(props: PinjaminWorkspaceProps) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const nav = navByRole[user.role];
   const current = nav.includes(view) ? view : nav[0];
   const mine = user.role !== "peminjam" ? loans : loans.filter((loan) => loan.borrowerId === user.id);
@@ -57,7 +62,7 @@ export default function PinjaminWorkspace(props: PinjaminWorkspaceProps) {
 
   async function run(action: () => void | Promise<void>, success: string) {
     setBusy(true); setError(""); setMessage("");
-    try { await action(); setMessage(success); setShowForm(false); }
+    try { await action(); setMessage(success); setShowForm(false); setEditingTool(null); }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Perubahan gagal. Coba lagi."); }
     finally { setBusy(false); }
   }
@@ -68,7 +73,16 @@ export default function PinjaminWorkspace(props: PinjaminWorkspaceProps) {
       <div className={styles.session}>
         <span>{user.name}</span><span className={styles.role}>{user.role}</span>
         {props.demoMode && <>
-          <label className={styles.demoRole}>Tampilan demo<select aria-label="Ganti peran demo" value={user.role} onChange={(event) => { props.onDemoRoleChange?.(event.target.value as Role); setView("dashboard"); setShowForm(false); }}><option value="admin">Admin</option><option value="petugas">Petugas</option><option value="peminjam">Peminjam</option></select></label>
+          {props.roleSwitcherMode === "links" ? (
+            <div className={styles.demoRole}>
+              <span className={styles.muted}>Akses:</span>
+              <a href="/" className={user.role === "peminjam" ? styles.selected : ""}>Peminjam (/)</a>
+              <a href="/petugas" className={user.role === "petugas" ? styles.selected : ""}>Petugas (/petugas)</a>
+              <a href="/admin" className={user.role === "admin" ? styles.selected : ""}>Admin (/admin)</a>
+            </div>
+          ) : (
+            <label className={styles.demoRole}>Tampilan demo<select aria-label="Ganti peran demo" value={user.role} onChange={(event) => { props.onDemoRoleChange?.(event.target.value as Role); setView("dashboard"); setShowForm(false); }}><option value="admin">Admin</option><option value="petugas">Petugas</option><option value="peminjam">Peminjam</option></select></label>
+          )}
           <span className={styles.demo}>Data demo · tanpa autentikasi</span>
         </>}
       </div>
@@ -84,6 +98,33 @@ export default function PinjaminWorkspace(props: PinjaminWorkspaceProps) {
         {error && <p className={styles.error} role="alert">{error}</p>}
         {showForm && <FormPanel view={current} user={user} tools={tools} users={users} busy={busy} onCancel={() => setShowForm(false)} onCreateLoan={(input) => run(() => props.onCreateLoan(input), "Pengajuan tersimpan.")} onCreateTool={(input) => run(() => props.onCreateTool(input), "Alat berhasil ditambahkan.")} onCreateUser={(input) => run(() => props.onCreateUser(input), "Pengguna berhasil ditambahkan.")} />}
 
+        {editingTool && (
+          <form className={styles.form} onSubmit={(event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const data = new FormData(event.currentTarget);
+            void run(() => props.onUpdateTool?.({
+              id: editingTool.id,
+              name: String(data.get("name")),
+              code: String(data.get("code")),
+              categoryId: Number(data.get("categoryId")),
+              stock: Number(data.get("stock")),
+              condition: String(data.get("condition"))
+            }), "Data alat berhasil diperbarui.");
+            setEditingTool(null);
+          }}>
+            <h2>Edit alat: {editingTool.name}</h2>
+            <label>Nama alat<input name="name" defaultValue={editingTool.name} required maxLength={120}/></label>
+            <label>Kode alat<input name="code" defaultValue={editingTool.code} required maxLength={32}/></label>
+            <label>Kategori ID<input name="categoryId" type="number" min="1" defaultValue={editingTool.categoryId} required/></label>
+            <label>Stok total<input name="stock" type="number" min="1" defaultValue={editingTool.stock} required/></label>
+            <label>Kondisi<select name="condition" defaultValue={editingTool.condition}><option value="Baik">Baik</option><option value="Perlu perbaikan">Perlu perbaikan</option><option value="Rusak ringan">Rusak ringan</option></select></label>
+            <div className={styles.formActions}>
+              <button type="button" className={styles.secondary} onClick={() => setEditingTool(null)}>Batal</button>
+              <button type="submit" className={styles.primary} disabled={busy}>{busy ? "Menyimpan…" : "Perbarui alat"}</button>
+            </div>
+          </form>
+        )}
+
         {current === "dashboard" && <><div className={styles.metrics}>
           <Metric label="Alat tersedia" value={`${tools.reduce((sum, tool) => sum + tool.available, 0)}`} note={`dari ${tools.reduce((sum, tool) => sum + tool.stock, 0)} unit`}/>
           <Metric label="Pinjaman aktif" value={activeLoans.length} note={`${mine.filter((loan) => loan.status === "late").length} terlambat`}/>
@@ -93,7 +134,7 @@ export default function PinjaminWorkspace(props: PinjaminWorkspaceProps) {
           <div className={styles.tableWrap}><table><thead><tr><th scope="col">Pengajuan</th><th scope="col">Alat</th><th scope="col">Jatuh tempo</th><th scope="col">Status</th></tr></thead><tbody>{[...mine].sort((a, b) => b.code.localeCompare(a.code)).slice(0, 5).map((loan) => <tr key={loan.id}><td><strong>{loan.code}</strong><span className={styles.cellSub}>{loan.borrower}</span></td><td>{loan.tool} × {loan.qty}</td><td>{dateLabel(loan.dueDate)}</td><td><Status status={loan.status}/></td></tr>)}</tbody></table>{mine.length === 0 && <Empty />}</div>
         </Panel></>}
 
-        {current === "inventory" && <><SearchBox value={query} onChange={setQuery} label="Cari alat" placeholder="Cari nama, kode, kategori…"/><div className={styles.cards}>{visibleTools.map((tool) => <article className={styles.toolCard} key={tool.id}><div className={styles.cardTop}><span className={styles.category}>{tool.category}</span><span className={tool.available > 0 ? styles.stock : styles.emptyStock}>{tool.available} tersedia</span></div><h2>{tool.name}</h2><p className={styles.muted}>{tool.code} · kondisi {tool.condition.toLowerCase()}</p><div className={styles.cardBottom}><span>{tool.stock} unit total</span>{user.role === "peminjam" && <button type="button" className={styles.linkButton} onClick={() => { setView("loans"); setShowForm(true); }} disabled={tool.available < 1}>Ajukan pinjam</button>}</div></article>)}</div>{visibleTools.length === 0 && <Empty />}</>}
+        {current === "inventory" && <><SearchBox value={query} onChange={setQuery} label="Cari alat" placeholder="Cari nama, kode, kategori…"/><div className={styles.cards}>{visibleTools.map((tool) => <article className={styles.toolCard} key={tool.id}><div className={styles.cardTop}><span className={styles.category}>{tool.category}</span><span className={tool.available > 0 ? styles.stock : styles.emptyStock}>{tool.available} tersedia</span></div><h2>{tool.name}</h2><p className={styles.muted}>{tool.code} · kondisi {tool.condition.toLowerCase()}</p><div className={styles.cardBottom}><span>{tool.stock} unit total</span><div className={styles.actions}>{user.role === "peminjam" && <button type="button" className={styles.linkButton} onClick={() => { setView("loans"); setShowForm(true); }} disabled={tool.available < 1}>Ajukan pinjam</button>}{(user.role === "admin" || user.role === "petugas") && <><button type="button" className={styles.linkButton} onClick={() => { setEditingTool(tool); setShowForm(false); }}>Edit</button><button type="button" className={styles.dangerButton} disabled={busy} onClick={() => { if (confirm(`Hapus alat ${tool.name}?`)) void run(() => props.onDeleteTool?.(tool.id) as Promise<void>, "Alat berhasil dihapus."); }}>Hapus</button></>}</div></div></article>)}</div>{visibleTools.length === 0 && <Empty />}</>}
 
         {current === "loans" && <><SearchBox value={query} onChange={setQuery} label="Cari peminjaman" placeholder="Cari kode, nama peminjam, alat…"/><div className={styles.tableWrap}><table><thead><tr><th scope="col">Pengajuan</th><th scope="col">Alat</th><th scope="col">Periode</th><th scope="col">Status</th><th scope="col">Tindakan</th></tr></thead><tbody>{visibleLoans.map((loan) => <tr key={loan.id}><td><strong>{loan.code}</strong><span className={styles.cellSub}>{loan.borrower} · {loan.qty} unit</span></td><td>{loan.tool}</td><td>{dateLabel(loan.borrowDate)}<span className={styles.cellSub}>Kembali {dateLabel(loan.dueDate)}</span></td><td><Status status={loan.status}/></td><td>{user.role !== "peminjam" && loan.status === "pending" ? <div className={styles.actions}><button type="button" className={styles.linkButton} disabled={busy} onClick={() => void run(() => props.onDecideLoan(loan.id, "approved"), "Pengajuan disetujui.")}>Setujui</button><button type="button" className={styles.dangerButton} disabled={busy} onClick={() => void run(() => props.onDecideLoan(loan.id, "rejected"), "Pengajuan ditolak.")}>Tolak</button></div> : "—"}</td></tr>)}</tbody></table>{visibleLoans.length === 0 && <Empty />}</div></>}
 

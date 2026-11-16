@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
 import type { PoolClient, QueryResultRow } from "pg";
-import type { Loan, LoanReturn, Tool } from "@/lib/types";
+import type { Loan, LoanReturn } from "@/lib/types";
 import { query, withTransaction } from "@/lib/server/db";
 import { fineFor } from "./fine";
 import { ApiError, isoDate, positiveInt, text } from "./http";
+
+export { listTools, updateTool, deleteTool } from "./tools";
 
 type Row<T> = T & QueryResultRow;
 type Actor = { id: number; name: string };
@@ -16,13 +18,6 @@ const LOAN_SELECT = `SELECT l.id, l.code, l.borrower_id AS "borrowerId", u.name 
 
 function recordActivity(client: PoolClient, actor: Actor, action: string, target: string) {
   return client.query("INSERT INTO activity_logs (actor_id, actor_name, action, target) VALUES ($1, $2, $3, $4)", [actor.id, actor.name, action, target]);
-}
-
-export async function listTools(): Promise<Tool[]> {
-  const { rows } = await query<Row<Tool>>(`SELECT t.id, t.code, t.name, t.category_id AS "categoryId", c.name AS category,
-    t.stock, t.available, t.condition, t.active FROM tools t JOIN categories c ON c.id = t.category_id
-    WHERE t.active = true ORDER BY t.name, t.id`);
-  return rows;
 }
 
 export async function listLoans(borrowerId?: number): Promise<Loan[]> {

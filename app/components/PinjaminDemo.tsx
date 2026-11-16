@@ -36,12 +36,12 @@ const categoriesOf = (tools: Tool[]): Category[] =>
     return { id, name, kinds: items.length, available: items.reduce((sum, tool) => sum + tool.available, 0) };
   });
 
-export default function PinjaminDemo() {
+export default function PinjaminDemo({ initialRole = "peminjam", roleSwitcherMode = "links" }: { initialRole?: Role; roleSwitcherMode?: "select" | "links" } = {}) {
   const [tools, setTools] = useState<Tool[]>(seedTools);
   const [loans, setLoans] = useState<Loan[]>(seedLoans);
   const [users, setUsers] = useState<User[]>(seedUsers);
   const [logs, setLogs] = useState<LogEntry[]>(seedLogs);
-  const [role, setRole] = useState<Role>("admin");
+  const [role, setRole] = useState<Role>(initialRole);
   const user = useMemo<SessionUser>(() => { const found = users.find((item) => item.role === role && item.active) ?? users[0]; return { id: found.id, name: found.name, email: found.email, role: found.role }; }, [users, role]);
   const categories = useMemo(() => categoriesOf(tools), [tools]);
   const today = () => new Date().toISOString().slice(0, 10);
@@ -55,6 +55,7 @@ export default function PinjaminDemo() {
     categories={categories}
     logs={logs}
     demoMode
+    roleSwitcherMode={roleSwitcherMode}
     onDemoRoleChange={setRole}
     onCreateLoan={(input) => {
       const tool = tools.find((item) => item.id === input.toolId);
@@ -87,6 +88,30 @@ export default function PinjaminDemo() {
       const category = categories.find((item) => item.id === input.categoryId);
       setTools((list) => [...list, { ...input, id: Date.now(), category: category?.name ?? `Kategori ${input.categoryId}`, available: input.stock, active: true }]);
       log("Menambah alat", input.code);
+    }}
+    onUpdateTool={(input) => {
+      if (tools.some((item) => item.id !== input.id && item.code.toLowerCase() === input.code.toLowerCase())) throw new Error("Kode alat sudah dipakai.");
+      const category = categories.find((item) => item.id === input.categoryId);
+      setTools((list) => list.map((item) => {
+        if (item.id !== input.id) return item;
+        const diff = input.stock - item.stock;
+        const newAvailable = Math.max(0, item.available + diff);
+        return {
+          ...item,
+          ...input,
+          category: category?.name ?? `Kategori ${input.categoryId}`,
+          available: newAvailable
+        };
+      }));
+      log("Memperbarui alat", input.code);
+    }}
+    onDeleteTool={(toolId) => {
+      const tool = tools.find((item) => item.id === toolId);
+      if (!tool) throw new Error("Alat tidak ditemukan.");
+      const hasActiveLoan = loans.some((loan) => loan.toolId === toolId && ["pending", "approved", "borrowed", "late"].includes(loan.status));
+      if (hasActiveLoan) throw new Error("Tidak dapat menghapus: alat sedang dalam peminjaman aktif.");
+      setTools((list) => list.filter((item) => item.id !== toolId));
+      log("Menghapus alat", tool.code);
     }}
     onCreateUser={(input) => {
       if (users.some((item) => item.email.toLowerCase() === input.email.toLowerCase())) throw new Error("Email sudah terdaftar.");

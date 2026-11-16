@@ -1,5 +1,5 @@
 import { api, requireRole } from "@/lib/server/api/http";
-import { listTools } from "@/lib/server/api/loans";
+import { listTools } from "@/lib/server/api/tools";
 
 /** Catalog is readable by any signed-in role; keep the guard when session auth lands. */
 export function GET() {
