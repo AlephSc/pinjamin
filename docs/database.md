@@ -11,7 +11,7 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/seed.sql
 ```
 
-`seed.sql` idempotently inserts five categories and eight demo tools. It creates no users, passwords, or transactions. To validate schema/seed locally without credentials or Neon, run `node db/self-check.mjs`; this uses installed PGlite in memory. The shared schema's opening `# db/schema.sql ...` line is not valid PostgreSQL comment syntax. The self-check strips only that header to exercise the rest; fix it to `--` in the shared schema before running the exact migration command above.
+`seed.sql` idempotently inserts five categories and eight demo tools. It creates no users, passwords, or transactions. To validate schema/seed locally without credentials or Neon, run `node db/self-check.mjs`; this uses installed PGlite in memory. The schema is valid PostgreSQL comment syntax and the smoke test applies the schema and seed directly.
 
 ## Shared-contract notes
 

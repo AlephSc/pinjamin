@@ -57,6 +57,9 @@ export async function readJson(request: Request): Promise<Record<string, unknown
 }
 
 export function positiveInt(value: unknown, name: string): number {
+  if (typeof value !== "number" && (typeof value !== "string" || !/^\d+$/.test(value))) {
+    throw new ApiError(400, "INVALID_INPUT", `${name} must be a positive integer.`);
+  }
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isSafeInteger(n) || n <= 0) throw new ApiError(400, "INVALID_INPUT", `${name} must be a positive integer.`);
   return n;
