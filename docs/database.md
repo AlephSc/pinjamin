@@ -11,7 +11,14 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/schema.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/seed.sql
 ```
 
-`seed.sql` idempotently inserts five categories and eight demo tools. It creates no users, passwords, or transactions. To validate schema/seed locally without credentials or Neon, run `node db/self-check.mjs`; this uses installed PGlite in memory. The schema is valid PostgreSQL comment syntax and the smoke test applies the schema and seed directly.
+For an existing database that has not yet received the return-request columns, apply migrations in order before deploying this application version:
+
+```sh
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/20261117_return_requests.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/20261118_return_audit.sql
+```
+
+If `20261117_return_requests.sql` is already applied, run only the second command. Both migrations are idempotent. The first adds request timestamp/note fields; the second adds separate requested date/condition audit fields and backfills existing returns linked to pending requests. Confirm the required columns exist in `public.loans` and `public.loan_returns` before deploying. Protect `DATABASE_URL`; never place it in source control.
 
 ## Shared-contract notes
 

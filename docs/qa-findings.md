@@ -1,19 +1,38 @@
-# Pinjamin — temuan audit
+# Pinjamin — status QA
 
-Terakhir diverifikasi: `npm run check` dan `npm run build` lulus. `node tests/loan-lifecycle.mjs`: 16 checks lulus, 7 gap terbuka.
+Diverifikasi pada 2026-11-19 setelah redesign UI/UX dan perbaikan sistem. `npm run typecheck`, `npm run check` (20 lifecycle + 7 kategori + schema/migration/route), `npm run build`, dan smoke route lokal lulus. Verifikasi browser lokal mencakup login, workspace admin/peminjam, buat/hapus kategori, daftar alat, dan form pengajuan.
 
-## Critical
-- **API auth belum terhubung.** `requireRole` fail-closed (401) karena tidak ada session resolver. Sebelum rilis: integrasikan autentikasi server tepercaya; uji role + kepemilikan borrower untuk semua route. Owner: backend.
+## Perubahan terverifikasi iterasi ini
 
-## High
-- **Stok dan status belum atomik.** Approval harus mengunci loan pending, update stok dengan kondisi `available >= qty`, ubah status dan tulis activity log dalam satu transaksi. Tolak konflik/out-of-stock. Owner: backend + DB.
-- **Identitas peminjam tak terikat pada session.** Jangan percaya `borrowerId` dari body; turunkan dari session aktif dengan role `peminjam`. Tolak akun nonaktif. Owner: backend.
-- **Lifecycle belum membatasi semua transisi.** Tolak approval/rejection non-pending, pengembalian duplikat, alat nonaktif, dan tanggal tidak valid; perubahan return/stok/log harus atomik. Owner: backend.
-- **UI demo mengganti role secara lokal.** Bukan otorisasi. Hapus role-switch saat integrasi auth; sembunyikan aksi dan enforce di server. Owner: frontend + backend.
+- Redesign monokrom + biru sinyal `#4B8DFF` (60/30/10): rail hitam, area kerja putih, form inline, tabel/status rapi, loading/error boundary, konfirmasi hapus inline.
+- Perbaikan batas RSC: `PinjaminDemo` (server) tidak lagi mengirim callback ke client; aksi API dipindah ke `WorkspaceClient`.
+- Perbaikan `assertSameOrigin`: membandingkan Origin dengan host/forwarded-host, bukan `request.url` yang dinormalkan Next ke `localhost`; request sah tidak lagi 403, cross-origin tetap 403.
+- CRUD kategori admin: API + UI + test PGlite (create/list/delete, duplikat, kategori terpakai tidak boleh dihapus).
+- Migrasi `20261117_return_requests.sql` dan `20261118_return_audit.sql` diterapkan ke database yang dipakai lokal; kolom return request/audit terverifikasi ada.
+- `AUTH_SECRET` lokal ditambahkan (di-generate, tidak ditampilkan); sebelumnya hanya `DATABASE_URL` sehingga login/sesi gagal.
+- Fixture/route QA sementara sudah dihapus setelah pengujian; tidak ada kredensial QA tersisa di source.
 
-## Medium
-- **Denda tidak dijamin schema.** Hitung server-side dari tanggal jatuh tempo dan tanggal kembali; tarif awal Rp2.000/hari, jangan terima nilai denda klien. Owner: backend + DB.
-- **Batas stok pinjaman.** Validasi kuantitas tersedia pada approval dengan transaksi/conditional update; bukan hanya saat membuat pengajuan. Owner: backend + DB.
+## Blocker rilis
 
-## Ringkasan
-Pemeriksaan saat ini lulus untuk schema/seed PGlite, typecheck, validasi input dasar, kalkulasi denda, dan auth fail-closed. Lulus build bukan berarti siap produksi: autentikasi belum disambungkan dan alur stok/lifecycle masih membutuhkan integrasi transaksional.
+- **Production belum memuat build terbaru.** Perubahan belum di-commit/push/deploy; `https://pinjamin-aleph.vercel.app/` masih versi lama.
+- **Environment Vercel perlu `AUTH_SECRET`.** Tanpa secret ≥32 karakter, login/sesi produksi gagal. Set di Vercel project environment, jangan commit.
+- **Migrasi produksi perlu dikonfirmasi terpisah.** Migrasi sudah diterapkan pada database yang dipakai uji lokal; pastikan database produksi Vercel menerima migrasi yang sama sebelum deploy.
+- **Logout tidak mencabut JWT yang sudah dicuri.** Sesi stateless berlaku sampai TTL 12 jam; pertimbangkan revocation/TTL lebih pendek sesuai kebutuhan ancaman.
+- **CRUD user belum lengkap.** Baru create; edit/nonaktifkan belum ada. Laporan belum filter tanggal/status dan ekspor CSV/PDF.
+
+## Bukti saat ini
+
+- Lifecycle API memvalidasi status, role, kepemilikan borrower, tanggal return, dan transaksi stok dengan row lock; diuji PGlite.
+- Test kategori memvalidasi create/list/delete, konflik nama, dan larangan hapus kategori yang dipakai alat (termasuk alat nonaktif).
+- Smoke route: halaman publik 200, challenge CSRF, sesi anonim, API terlindungi 401, dan cross-origin 403.
+- Browser lokal: login API 200 + sesi role; workspace admin render nav/ringkasan/tabel; kategori dibuat (201) dan dihapus (200) via UI; peminjam melihat 8 alat dan form pengajuan dengan max qty mengikuti alat terpilih; mobile 390px tanpa overflow horizontal.
+- Detector desain impeccable: tidak ada temuan pada target UI yang berubah.
+- Pemindaian pola secret source terdahulu tidak menemukan kecocokan; credential GitHub pernah terekspos di sesi lama dan rotasinya belum terkonfirmasi.
+
+## Tindak lanjut
+
+1. Set `AUTH_SECRET` dan `DATABASE_URL` di Vercel; konfirmasi migrasi Neon produksi.
+2. Rotasi credential GitHub yang pernah terpapar.
+3. Commit/push setelah gate keamanan, deploy, lalu smoke-test route production dan login ber-role.
+4. Lengkapi CRUD user dan filter/ekspor laporan bila diminta untuk rilis UKK penuh.
+5. Perbarui status ini setiap kali bukti baru diverifikasi.

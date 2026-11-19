@@ -1,5 +1,4 @@
 -- Pinjamin schema (PostgreSQL 15+)
--- Sumber kebenaran struktur data. Dipakai Neon (produksi) dan PGlite (dev/uji lokal).
 
 create table if not exists categories (
   id serial primary key,
@@ -47,12 +46,20 @@ create table if not exists loans (
   constraint loans_due_not_before_borrow check (due_date >= borrow_date)
 );
 
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS return_requested_at timestamptz;
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS return_request_date date;
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS return_request_condition text;
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS return_request_note text;
+
 create table if not exists loan_returns (
   id serial primary key,
   loan_id integer not null unique references loans(id) on delete cascade,
   returned_at date not null,
   condition text not null,
   note text,
+  request_returned_at date,
+  request_condition text,
+  request_note text,
   fine integer not null default 0 check (fine >= 0),
   recorded_by integer references users(id) on delete set null,
   created_at timestamptz not null default now()
