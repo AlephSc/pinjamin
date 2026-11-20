@@ -14,11 +14,11 @@ Diverifikasi pada 2026-11-19 setelah redesign UI/UX dan perbaikan sistem. `npm r
 
 ## Blocker rilis
 
-- **Production belum memuat build terbaru.** Perubahan belum di-commit/push/deploy; `https://pinjamin-aleph.vercel.app/` masih versi lama.
-- **Environment Vercel perlu `AUTH_SECRET`.** Tanpa secret ≥32 karakter, login/sesi produksi gagal. Set di Vercel project environment, jangan commit.
-- **Migrasi produksi perlu dikonfirmasi terpisah.** Migrasi sudah diterapkan pada database yang dipakai uji lokal; pastikan database produksi Vercel menerima migrasi yang sama sebelum deploy.
+- **Production sudah live (2026-11-20).** Commit `42b07bc` ter-deploy; `/`, `/masuk`, `/api/auth/challenge`, `/api/auth/me` = 200. Alur challenge CSRF → login kredensial salah = 401 `INVALID_CREDENTIALS`; tanpa CSRF = 403 `CSRF_FAILED`. `AUTH_SECRET` diset di Vercel (Production/Preview/Development) via Playwriter; `DATABASE_URL` sudah ada.
+- **Login ber-role produksi belum diuji dengan akun sah.** Perlu akun admin/petugas/peminjam aktif di database produksi untuk E2E penuh.
 - **Logout tidak mencabut JWT yang sudah dicuri.** Sesi stateless berlaku sampai TTL 12 jam; pertimbangkan revocation/TTL lebih pendek sesuai kebutuhan ancaman.
 - **CRUD user belum lengkap.** Baru create; edit/nonaktifkan belum ada. Laporan belum filter tanggal/status dan ekspor CSV/PDF.
+- **Rotasi credential GitHub** yang pernah terekspos di sesi lama belum dikonfirmasi.
 
 ## Bukti saat ini
 
