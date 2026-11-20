@@ -4,6 +4,7 @@ out/
 *.tsbuildinfo
 .env
 .env*.local
+admin-credentials.local.txt
 .DS_Store
 npm-debug.log*
 .impeccable/

@@ -52,8 +52,8 @@ export default function LoginForm() {
         <h1 id="login-title">Masuk ke ruang kerja</h1>
         <p className={styles.loginLead}>Gunakan akun sekolah Anda. Akses menyesuaikan peran: admin, petugas, atau peminjam.</p>
         <form className={styles.loginForm} onSubmit={submit}>
-          <label>Email sekolah<input type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} maxLength={254} required /></label>
-          <label>Kata sandi<input type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} maxLength={1024} required /></label>
+          <label>Email sekolah<input type="email" autoComplete="username" placeholder="nama@sekolah.sch.id" value={email} onChange={e => setEmail(e.target.value)} maxLength={254} required /></label>
+          <label>Kata sandi<input type="password" autoComplete="current-password" placeholder="Masukkan kata sandi" value={password} onChange={e => setPassword(e.target.value)} maxLength={1024} required /></label>
           {error && <p className={styles.error} role="alert"><AlertCircle size={16} aria-hidden="true" />{error}</p>}
           <button className={styles.primary} type="submit" disabled={busy}>{busy ? "Memverifikasi…" : "Masuk"}</button>
         </form>

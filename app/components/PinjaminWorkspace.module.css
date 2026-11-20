@@ -6,7 +6,7 @@
   --paper: #ffffff;
   --paper-2: #f6f7f9;
   --line: #e3e5ea;
-  --line-strong: #c9ccd4;
+  --line-strong: #6b7280;
   --muted: #565b66;
   --muted-on-dark: #b9bdc7;
   --accent: #4b8dff;
@@ -118,7 +118,8 @@
 .confirmBox p { margin: 4px 0 0; font-size: 13px; color: #7a2a24; }
 
 /* Search */
-.search { display: flex; align-items: center; gap: 10px; max-width: 460px; height: 44px; border: 1px solid var(--line-strong); border-radius: 7px; background: var(--paper); padding: 0 13px; margin: 0 0 18px; color: var(--muted); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.search { display: flex; align-items: center; gap: 10px; max-width: 460px; height: 44px; border: 1.5px solid var(--line-strong); border-radius: 7px; background: var(--paper); padding: 0 13px; margin: 0 0 18px; color: var(--muted); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.search:hover { border-color: var(--ink); }
 .search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .search input { border: 0; outline: 0; width: 100%; min-width: 0; background: transparent; color: var(--ink); font-size: 14px; }
 .search input::placeholder { color: var(--muted); }
@@ -174,10 +175,12 @@
 .formHint { grid-column: 1 / -1; margin: 0; padding: 10px 12px; border-radius: 6px; background: var(--warn-soft); color: var(--warn); font-size: 13px; }
 .form > label, .returnForm label { display: flex; flex-direction: column; gap: 6px; color: var(--ink); font-size: 13px; font-weight: 600; }
 .form input, .form select, .form textarea, .returnForm input, .returnForm select, .returnForm textarea {
-  width: 100%; min-height: 44px; border: 1px solid var(--line-strong); border-radius: 7px;
+  width: 100%; min-height: 44px; border: 1.5px solid var(--line-strong); border-radius: 7px;
   background: var(--paper); padding: 9px 12px; color: var(--ink); font-size: 14px; font-weight: 400;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
+.form input::placeholder, .form textarea::placeholder, .returnForm textarea::placeholder { color: var(--muted); }
+.form input:hover, .form select:hover, .form textarea:hover, .returnForm input:hover, .returnForm select:hover, .returnForm textarea:hover { border-color: var(--ink); }
 .form textarea, .returnForm textarea { resize: vertical; }
 .form input:focus, .form select:focus, .form textarea:focus, .returnForm input:focus, .returnForm select:focus, .returnForm textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); outline: 0; }
 .span2 { grid-column: 1 / -1; }
@@ -211,7 +214,9 @@
 .loginLead { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
 .loginForm { display: grid; gap: 16px; }
 .loginForm label { display: grid; gap: 6px; font-weight: 600; font-size: 13px; }
-.loginForm input { width: 100%; min-height: 46px; padding: 10px 13px; border: 1px solid var(--line-strong); border-radius: 7px; font-size: 15px; transition: border-color 160ms ease, box-shadow 160ms ease; }
+.loginForm input { width: 100%; min-height: 46px; padding: 10px 13px; border: 1.5px solid var(--line-strong); border-radius: 7px; font-size: 15px; background: var(--paper); color: var(--ink); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.loginForm input::placeholder { color: var(--muted); }
+.loginForm input:hover { border-color: var(--ink); }
 .loginForm input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); outline: 0; }
 .loginForm button { min-height: 46px; width: 100%; }
 .loginBack { display: inline-block; margin-top: 20px; color: var(--muted); font-size: 13px; }
