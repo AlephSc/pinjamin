@@ -11,9 +11,17 @@
   --muted-on-dark: #b9bdc7;
   --accent: #4b8dff;
   --accent-strong: #2f6fe0;
+  --accent-deep: #2559b8;
   --accent-soft: #eaf1ff;
   --danger: #b3261e;
+  --danger-strong: #8f1d17;
+  --danger-deep: #7a1812;
   --danger-soft: #fdecea;
+  --danger-border: #f3cdc8;
+  --danger-text: #7a2a24;
+  --ok-border: #cde7d7;
+  --on-accent: #ffffff;
+  --error-on-dark: #ffb4ab;
   --ok: #1c6b46;
   --ok-soft: #e7f4ec;
   --warn: #8a5a00;

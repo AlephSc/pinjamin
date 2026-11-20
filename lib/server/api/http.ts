@@ -5,7 +5,7 @@ export const requireRole = requireSessionRole;
 export function jsonError(error: unknown): Response {
  const known = error instanceof ApiError ? error : null;
  if (!known) console.error("API request failed", error);
- return Response.json({error:{code:known?.code??"INTERNAL_ERROR",message:known?.message??"Terjadi kesalahan pada server."}},{status:known?.status??500,headers:{"Cache-Control":"no-store"}});
+ return Response.json({error:{code:known?.code??"INTERNAL_ERROR",message:known?.message??"Terjadi kesalahan pada server."}},{status:known?.status??500,headers:{"Cache-Control":"no-store",...(known?.headers??{})}});
 }
 export async function api<T>(work:()=>Promise<T>,status=200):Promise<Response>{try{const result=await work();if(result instanceof Response)return result;return Response.json(result,{status,headers:{"Cache-Control":"no-store"}});}catch(error){return jsonError(error);}}
 export async function route<T>(work:()=>Promise<T>,status=200):Promise<Response>{try{const result=await work();if(result instanceof Response)return result;return Response.json(result,{status,headers:{"Cache-Control":"no-store"}});}catch(error){return jsonError(error);}}

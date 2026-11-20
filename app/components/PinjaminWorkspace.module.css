@@ -55,8 +55,8 @@
 }
 .navItem span:first-of-type { flex: 1; }
 .navItem:hover { background: var(--ink-3); color: #fff; }
-.navItem.selected { background: var(--accent); color: #fff; font-weight: 650; }
-.navItem.selected:hover { background: var(--accent-strong); }
+.navItem.selected { background: var(--accent-strong); color: var(--on-accent); font-weight: 650; }
+.navItem.selected:hover { background: var(--accent-deep); }
 .navCount { background: rgba(255, 255, 255, 0.16); color: inherit; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .navItem.selected .navCount { background: rgba(255, 255, 255, 0.24); }
 .railBottom { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--ink-3); display: grid; gap: 10px; }
@@ -66,7 +66,7 @@
 .avatar { width: 34px; height: 34px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--ink-3); color: #fff; font-size: 13px; font-weight: 700; }
 .logoutButton { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; border: 1px solid var(--ink-3); border-radius: 7px; background: transparent; color: var(--muted-on-dark); font-size: 13px; font-weight: 600; transition: background-color 160ms ease, color 160ms ease; }
 .logoutButton:hover { background: var(--ink-3); color: #fff; }
-.railError { margin: 0; padding: 0 8px; color: #ffb4ab; font-size: 12px; }
+.railError { margin: 0; padding: 0 8px; color: var(--error-on-dark); font-size: 12px; }
 
 /* Main column */
 .main { min-width: 0; display: flex; flex-direction: column; }
@@ -92,13 +92,13 @@
   font-size: 14px; font-weight: 600; white-space: nowrap;
   transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
 }
-.primary { background: var(--accent); color: #fff; }
-.primary:hover { background: var(--accent-strong); }
+.primary { background: var(--accent-strong); color: var(--on-accent); }
+.primary:hover { background: var(--accent-deep); }
 .primary:active, .secondary:active, .dangerSolid:active { transform: translateY(1px); }
 .secondary { background: var(--paper); color: var(--ink); border-color: var(--line-strong); }
 .secondary:hover { background: var(--paper-2); }
-.dangerSolid { background: var(--danger); color: #fff; }
-.dangerSolid:hover { background: #8f1d17; }
+.dangerSolid { background: var(--danger); color: var(--on-accent); }
+.dangerSolid:hover { background: var(--danger-strong); }
 .linkButton, .dangerButton {
   display: inline-flex; align-items: center; gap: 5px; border: 0; background: none;
   padding: 6px 2px; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
@@ -106,16 +106,16 @@
 .linkButton { color: var(--accent-strong); }
 .linkButton:hover { color: var(--ink); }
 .dangerButton { color: var(--danger); }
-.dangerButton:hover { color: #7a1812; }
+.dangerButton:hover { color: var(--danger-deep); }
 
 /* Feedback */
 .notice, .error { display: flex; align-items: center; gap: 9px; border-radius: 7px; padding: 11px 14px; margin: 0 0 16px; font-size: 14px; }
-.notice { background: var(--ok-soft); color: var(--ok); border: 1px solid #cde7d7; }
-.error { background: var(--danger-soft); color: var(--danger); border: 1px solid #f3cdc8; }
-.confirmBox { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--danger-soft); border: 1px solid #f3cdc8; border-radius: var(--radius); padding: 14px 16px; margin: 0 0 18px; color: var(--danger); }
+.notice { background: var(--ok-soft); color: var(--ok); border: 1px solid var(--ok-border); }
+.error { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger-border); }
+.confirmBox { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--danger-soft); border: 1px solid var(--danger-border); border-radius: var(--radius); padding: 14px 16px; margin: 0 0 18px; color: var(--danger); }
 .confirmBox > div:first-of-type { flex: 1; min-width: 220px; }
 .confirmBox strong { font-size: 14px; }
-.confirmBox p { margin: 4px 0 0; font-size: 13px; color: #7a2a24; }
+.confirmBox p { margin: 4px 0 0; font-size: 13px; color: var(--danger-text); }
 
 /* Search */
 .search { display: flex; align-items: center; gap: 10px; max-width: 460px; height: 44px; border: 1.5px solid var(--line-strong); border-radius: 7px; background: var(--paper); padding: 0 13px; margin: 0 0 18px; color: var(--muted); transition: border-color 160ms ease, box-shadow 160ms ease; }

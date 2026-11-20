@@ -79,6 +79,14 @@ create table if not exists settings (
   value text not null
 );
 
+create table if not exists rate_limits (
+  key text primary key,
+  tokens double precision not null,
+  updated_at timestamptz not null default now()
+);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version integer NOT NULL DEFAULT 1;
+
 create index if not exists idx_loans_status on loans(status);
 create index if not exists idx_loans_borrower on loans(borrower_id);
 create index if not exists idx_tools_category on tools(category_id);
