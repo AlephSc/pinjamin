@@ -1,13 +1,25 @@
 /* Pinjamin global foundation — monochrome + signal blue, 60/30/10. */
 :root {
   --ink: #101114;
+  --ink-2: #1a1c21;
+  --ink-3: #262932;
   --paper: #ffffff;
   --paper-2: #f6f7f9;
   --line: #e3e5ea;
+  --line-strong: #6b7280;
   --muted: #565b66;
+  --muted-on-dark: #b9bdc7;
   --accent: #4b8dff;
+  --accent-strong: #2f6fe0;
   --accent-soft: #eaf1ff;
   --danger: #b3261e;
+  --danger-soft: #fdecea;
+  --ok: #1c6b46;
+  --ok-soft: #e7f4ec;
+  --warn: #8a5a00;
+  --warn-soft: #fff3d6;
+  --radius: 8px;
+  --shadow: 0 10px 30px rgba(16, 17, 20, 0.08);
   --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   color-scheme: light;
 }
