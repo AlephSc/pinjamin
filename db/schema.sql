@@ -2,7 +2,8 @@
 
 create table if not exists categories (
   id serial primary key,
-  name text not null unique
+  name text not null unique,
+  is_default boolean not null default false
 );
 
 create table if not exists users (

@@ -1,7 +1,14 @@
 -- Safe, repeatable demo inventory. No user credentials or secrets.
-insert into categories (name) values
+insert into categories (name)
+select category_name
+from (values
   ('Fotografi'), ('Presentasi'), ('Audio'), ('Komputer'), ('Umum')
+) as seed(category_name)
 on conflict (name) do nothing;
+
+update categories
+set is_default = true
+where name = 'Umum';
 
 insert into tools (code, name, category_id, stock, available, condition)
 select seed.code, seed.name, categories.id, seed.stock, seed.available, seed.condition

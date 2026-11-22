@@ -17,6 +17,8 @@ async function check(name, fn) { await fn(); passed++; console.log(`PASS ${name}
 async function rejects(name, promise, code) { await assert.rejects(promise, (error) => !code || error.code === code); passed++; console.log(`PASS ${name}`); }
 try {
   await db.exec(await readFile(path.join(root, "db/schema.sql"), "utf8"));
+  // Match a fresh production database: the default category always exists.
+  await db.query("INSERT INTO categories(name,is_default) VALUES('Umum',true) ON CONFLICT (name) DO NOTHING");
   await db.query("INSERT INTO users(name,email,password_hash,role) VALUES('QA Admin','qa-admin@test.invalid','x','admin')");
   globalThis.__categoryQaQuery = (...args) => db.query(...args);
   globalThis.__categoryQaTransaction = async (work) => { await db.exec("BEGIN"); try { const result = await work({ query: (...args) => db.query(...args) }); await db.exec("COMMIT"); return result; } catch (error) { await db.exec("ROLLBACK"); throw error; } };
@@ -27,10 +29,11 @@ try {
   const { createCategory, deleteCategory, listCategories } = require(temp);
   const actor = { id: 1, name: "QA Admin" };
   await check("create category returns aggregate and activity log", async () => { const result = await createCategory(actor, { name: "Kamera" }); assert.equal(result.name, "Kamera"); assert.equal(result.kinds, 0); const log = await db.query("SELECT action FROM activity_logs WHERE target='Kamera'"); assert.equal(log.rows[0].action, "Menambahkan kategori"); });
+  const kameraId = await db.query("SELECT id FROM categories WHERE name='Kamera'");
   await rejects("duplicate category name conflicts", createCategory(actor, { name: "Kamera" }), "CATEGORY_EXISTS");
-  await check("list categories returns category", async () => assert.deepEqual((await listCategories()).map((item) => item.name), ["Kamera"]));
-  await check("delete unused category logs activity", async () => { assert.equal((await deleteCategory(actor, "1")).deleted, true); const log = await db.query("SELECT action FROM activity_logs WHERE target='Kamera' ORDER BY id DESC LIMIT 1"); assert.equal(log.rows[0].action, "Menghapus kategori"); });
-  await check("cannot delete category referenced by inactive tool", async () => { await db.query("INSERT INTO categories(name) VALUES('Alat tulis')"); const category = await db.query("SELECT id FROM categories WHERE name='Alat tulis'"); await db.query("INSERT INTO tools(code,name,category_id,stock,available,active) VALUES('QA-1','Pensil',$1,1,1,false)", [category.rows[0].id]); await rejects("referenced category is retained", deleteCategory(actor, String(category.rows[0].id)), "CATEGORY_IN_USE"); });
+  await check("list categories returns category", async () => assert.deepEqual((await listCategories()).map((item) => item.name).sort(), ["Kamera", "Umum"]));
+  await check("delete unused category logs activity", async () => { assert.equal((await deleteCategory(actor, String(kameraId.rows[0].id))).deleted, true); const log = await db.query("SELECT action FROM activity_logs WHERE target LIKE 'Kamera%' ORDER BY id"); assert.equal(log.rows.at(-1)?.action, "Menghapus kategori dan memindahkan alat ke Umum"); });
+  await check("deleting a category moves its tools to the default category", async () => { await db.query("INSERT INTO categories(name) VALUES('Alat tulis')"); const category = await db.query("SELECT id FROM categories WHERE name='Alat tulis'"); await db.query("INSERT INTO tools(code,name,category_id,stock,available,active) VALUES('QA-1','Pensil',$1,1,1,true)", [category.rows[0].id]); const result = await deleteCategory(actor, String(category.rows[0].id)); assert.equal(result.moved, 1); const moved = await db.query("SELECT c.name FROM tools t JOIN categories c ON c.id=t.category_id WHERE t.code='QA-1'"); assert.equal(moved.rows[0].name, "Umum"); });
   await rejects("missing category returns not found", deleteCategory(actor, "999"), "CATEGORY_NOT_FOUND");
   console.log(`\n${passed} category checks passed`);
 } finally { await db.close(); for (const file of [temp, dbAdapter, httpAdapter]) await unlink(file).catch(() => {}); }
