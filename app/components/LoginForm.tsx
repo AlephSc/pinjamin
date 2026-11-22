@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import styles from "./PinjaminWorkspace.module.css";
 
-export default function LoginForm() {
+export default function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,12 +24,24 @@ export default function LoginForm() {
         token = value.csrf;
         setCsrf(token);
       }
-      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": token }, body: JSON.stringify({ email, password }) });
+      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json", "Origin": window.location.origin, "X-CSRF-Token": token }, body: JSON.stringify({ email, password }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error?.message ?? "Masuk gagal.");
       router.replace(body.user.role === "admin" ? "/admin" : body.user.role === "petugas" ? "/petugas" : "/");
       router.refresh();
     } catch (e) { setError(e instanceof Error ? e.message : "Masuk gagal."); }
+    finally { setBusy(false); }
+  }
+
+  async function startGoogle() {
+    if (!googleEnabled || busy) return;
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/auth/google", { cache: "no-store" });
+      const body = await response.json();
+      if (!response.ok || typeof body.url !== "string") throw new Error(body.error?.message ?? "Login Google belum diaktifkan.");
+      window.location.assign(body.url);
+    } catch (e) { setError(e instanceof Error ? e.message : "Login Google belum diaktifkan."); }
     finally { setBusy(false); }
   }
 
@@ -51,6 +63,14 @@ export default function LoginForm() {
         <a className={styles.loginBrand} href="/"><span aria-hidden="true">P</span><span>Pinjamin<small>Inventaris sekolah, lebih tertata.</small></span></a>
         <h1 id="login-title">Masuk ke ruang kerja</h1>
         <p className={styles.loginLead}>Gunakan akun sekolah Anda. Akses menyesuaikan peran: admin, petugas, atau peminjam.</p>
+        {googleEnabled ? <button type="button" className={styles.loginGoogle} onClick={startGoogle} disabled={busy}>
+          <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
+          Lanjutkan dengan Google
+        </button> : <a className={`${styles.loginGoogle} ${styles.loginGoogleDisabled}`} href="/masuk" aria-disabled="true">
+          <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
+          Login Google belum aktif
+        </a>}
+        <div className={styles.loginDivider} aria-hidden="true">atau</div>
         <form className={styles.loginForm} onSubmit={submit}>
           <label>Email sekolah<input type="email" autoComplete="username" placeholder="nama@sekolah.sch.id" value={email} onChange={e => setEmail(e.target.value)} maxLength={254} required /></label>
           <label>Kata sandi<input type="password" autoComplete="current-password" placeholder="Masukkan kata sandi" value={password} onChange={e => setPassword(e.target.value)} maxLength={1024} required /></label>

@@ -219,7 +219,6 @@ Bukti testing berupa test case, hasil aktual, status lulus/gagal, dan screenshot
 - Multi-cabang dan multi-gudang.
 - Integrasi barcode/RFID.
 - Import data Excel massal.
-- SSO Google.
 - Chat internal.
 - Offline-first/PWA penuh.
 - Analitik lanjutan dan machine learning.

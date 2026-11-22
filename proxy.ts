@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUserFromRequest } from "@/lib/server/auth";
+import { requestOrigin } from "@/lib/server/api/http";
+
+function appPath(request: NextRequest, path: string) {
+  return new URL(path, `${requestOrigin(request)}/`);
+}
 
 export async function proxy(request: NextRequest) {
   let user;
@@ -10,14 +15,14 @@ export async function proxy(request: NextRequest) {
   }
   const path = request.nextUrl.pathname;
   if (path.startsWith("/admin")) {
-    if (!user) return NextResponse.redirect(new URL("/masuk", request.url));
-    if (user.role !== "admin") return NextResponse.redirect(new URL(user.role === "petugas" ? "/petugas" : "/", request.url));
+    if (!user) return NextResponse.redirect(appPath(request, "/masuk"));
+    if (user.role !== "admin") return NextResponse.redirect(appPath(request, user.role === "petugas" ? "/petugas" : "/"));
   }
   if (path.startsWith("/petugas")) {
-    if (!user) return NextResponse.redirect(new URL("/masuk", request.url));
-    if (user.role === "peminjam") return NextResponse.redirect(new URL("/", request.url));
+    if (!user) return NextResponse.redirect(appPath(request, "/masuk"));
+    if (user.role === "peminjam") return NextResponse.redirect(appPath(request, "/"));
   }
-  if (path === "/masuk" && user) return NextResponse.redirect(new URL(user.role === "admin" ? "/admin" : user.role === "petugas" ? "/petugas" : "/", request.url));
+  if (path === "/masuk" && user) return NextResponse.redirect(appPath(request, user.role === "admin" ? "/admin" : user.role === "petugas" ? "/petugas" : "/"));
   return NextResponse.next();
 }
 

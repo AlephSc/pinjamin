@@ -10,7 +10,10 @@ create table if not exists users (
   id serial primary key,
   name text not null,
   email text not null unique,
-  password_hash text not null,
+  password_hash text,
+  provider text not null default 'password' check (provider in ('password','google')),
+  google_id text unique,
+  email_verified boolean not null default true,
   role text not null check (role in ('admin','petugas','peminjam')),
   active boolean not null default true,
   created_at timestamptz not null default now()
@@ -87,6 +90,10 @@ create table if not exists rate_limits (
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version integer NOT NULL DEFAULT 1;
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS provider text NOT NULL DEFAULT 'password' CHECK (provider IN ('password','google'));
+ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id text UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT true;
 
 create index if not exists idx_loans_status on loans(status);
 create index if not exists idx_loans_borrower on loans(borrower_id);

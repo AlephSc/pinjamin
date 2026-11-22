@@ -1,7 +1,8 @@
 export type Role = "admin" | "petugas" | "peminjam";
+export type AuthProvider = "password" | "google";
 export type LoanStatus = "pending" | "approved" | "rejected" | "borrowed" | "late" | "returned";
 export type SessionUser = { id:number; name:string; email:string; role:Role };
-export type Category = { id:number; name:string; kinds:number; available:number };
+export type Category = { id:number; name:string; isDefault:boolean; kinds:number; available:number };
 export type Tool = { id:number; code:string; name:string; categoryId:number; category:string; stock:number; available:number; condition:string; active:boolean };
 export type User = SessionUser & { active:boolean };
 export type Loan = { id:number; code:string; borrowerId:number; borrower:string; toolId:number; tool:string; qty:number; borrowDate:string; dueDate:string; status:LoanStatus; purpose:string; note:string|null; createdAt:string; returnRequested?:boolean; returnRequestNote?:string|null; returnRequestDate?:string|null; returnRequestCondition?:string|null; returnedAt?:string|null; returnCondition?:string|null; returnNote?:string|null; fine?:number|null };
