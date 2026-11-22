@@ -58,13 +58,13 @@ console.log(`PASS login rate limit returns 429 + Retry-After=${retryAfter}`);
 
 // 3. Session revocation: a valid token stops working after token_version bump.
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
-await client.connect();
-const email = `revoke-probe-${randomBytes(4).toString("hex")}@pinjamin.local`;
-const password = randomBytes(12).toString("base64url");
-const salt = randomBytes(16).toString("hex");
-const hash = `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`;
 try {
-  const ins = await client.query("INSERT INTO users(name,email,password_hash,role,active) VALUES($1,$2,$3,'peminjam',true) RETURNING id", ["Revoke Probe", email, hash]);
+  await client.connect();
+  const email = `revoke-probe-${randomBytes(4).toString("hex")}@pinjamin.local`;
+  const password = randomBytes(12).toString("base64url");
+  const salt = randomBytes(16).toString("hex");
+  const hash = `scrypt$${salt}$${scryptSync(password, salt, 64).toString("hex")}`;
+  const ins = await client.query("INSERT INTO users(name,email,password_hash,provider,role,active) VALUES($1,$2,$3,'password','peminjam',true) RETURNING id", ["Revoke Probe", email, hash]);
   const userId = ins.rows[0].id;
   const c2 = await csrf();
   const ok = await login(email, password, c2);
@@ -77,6 +77,20 @@ try {
   assert.equal((await meAfter.json()).user, null, "session must be invalid after token_version bump");
   console.log("PASS session revocation invalidates outstanding token");
   await client.query("DELETE FROM users WHERE id=$1", [userId]);
+
+  // 4. Google-only accounts cannot sign in through the password form.
+  const googleEmail = `google-only-${randomBytes(4).toString("hex")}@pinjamin.local`;
+  const googlePassword = randomBytes(12).toString("base64url");
+  const googleSalt = randomBytes(16).toString("hex");
+  const googleHash = `scrypt$${googleSalt}$${scryptSync(googlePassword, googleSalt, 64).toString("hex")}`;
+  const googleUser = await client.query("INSERT INTO users(name,email,password_hash,provider,google_id,role,active) VALUES($1,$2,$3,'google','probe-sub','peminjam',true) RETURNING id", ["Google Only", googleEmail, googleHash]);
+  const c3 = await csrf();
+  const googleLogin = await login(googleEmail, googlePassword, c3);
+  assert.equal(googleLogin.status, 401, "Google-only account must not sign in with a password");
+  const googleMe = await fetch(`${BASE}/api/auth/me`, { headers: { Cookie: googleLogin.headers.get("set-cookie") ?? "" } });
+  assert.equal((await googleMe.json()).user, null, "Google-only password login must not issue a session");
+  await client.query("DELETE FROM users WHERE id=$1", [googleUser.rows[0].id]);
+  console.log("PASS Google-only account cannot use the password form");
 } finally {
   await client.end();
 }

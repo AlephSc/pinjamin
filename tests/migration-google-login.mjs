@@ -6,7 +6,7 @@ const db = new PGlite();
 const migration = await readFile(new URL("../db/migrations/20261123_google_login.sql", import.meta.url), "utf8");
 try {
   await db.exec(await readFile(new URL("../db/schema.sql", import.meta.url), "utf8"));
-  await db.exec("INSERT INTO users(name,email,password_hash,role) VALUES ('Password User','password@test.invalid','x','peminjam'); INSERT INTO users(name,email,password_hash,role) VALUES ('Google User','google@test.invalid',NULL,'petugas');");
+  await db.exec("INSERT INTO users(name,email,password_hash,provider,role) VALUES ('Password User','password@test.invalid','x','password','peminjam'); INSERT INTO users(name,email,password_hash,provider,role) VALUES ('Google User','google@test.invalid',NULL,'google','petugas');");
   await db.exec(migration);
   await db.exec(migration);
 

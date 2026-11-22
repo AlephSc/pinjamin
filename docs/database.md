@@ -16,9 +16,28 @@ For an existing database that has not yet received the return-request columns, a
 ```sh
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/20261117_return_requests.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/20261118_return_audit.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/20261122_default_category.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f db/migrations/20261123_google_login.sql
 ```
 
-If `20261117_return_requests.sql` is already applied, run only the second command. Both migrations are idempotent. The first adds request timestamp/note fields; the second adds separate requested date/condition audit fields and backfills existing returns linked to pending requests. Confirm the required columns exist in `public.loans` and `public.loan_returns` before deploying. Protect `DATABASE_URL`; never place it in source control.
+Alternatively apply a single migration with the bundled helper:
+
+```sh
+node scripts/apply-migration.mjs db/migrations/20261123_google_login.sql
+```
+
+If `20261117_return_requests.sql` is already applied, run only the later commands. All migrations are idempotent. Confirm the required columns exist in `public.loans`, `public.loan_returns`, and `public.users` before deploying. Protect `DATABASE_URL`; never place it in source control.
+
+## Google login configuration
+
+Google login stays disabled until these environment variables are set:
+
+- `GOOGLE_CLIENT_ID` — OAuth client ID from Google Cloud.
+- `GOOGLE_CLIENT_SECRET` — OAuth client secret; never commit it or store it in the database.
+- `GOOGLE_REDIRECT_URI` — HTTPS callback URL ending in `/api/auth/google/callback`.
+- `AUTH_SECRET` — at least 32 characters; used to sign the Google state cookie and application sessions.
+
+The login button remains disabled when the configuration is incomplete. Google accounts use `provider='google'`; password accounts keep `provider='password'` and cannot sign in through the Google form.
 
 ## Shared-contract notes
 

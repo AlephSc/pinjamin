@@ -21,9 +21,17 @@ async function recordLog(actor: { id: number; name: string }, action: string, ta
   await query("INSERT INTO activity_logs(actor_id,actor_name,action,target) VALUES($1,$2,$3,$4)", [actor.id, actor.name, action, target]);
 }
 
+function appOrigin(request: Request) {
+  const origin = requestOrigin(request);
+  const host = new URL(origin).hostname;
+  if (!host || host === "0.0.0.0" || host === "::") throw new ApiError(400, "INVALID_ORIGIN", "Origin callback tidak valid.");
+  return origin;
+}
+
 function safeRelativeRedirect(request: Request, path: string) {
-  const target = new URL(path, `${requestOrigin(request)}/`);
-  if (target.origin !== requestOrigin(request)) throw new ApiError(400, "INVALID_REDIRECT", "Tujuan redirect tidak valid.");
+  const origin = appOrigin(request);
+  const target = new URL(path, `${origin}/`);
+  if (target.origin !== origin) throw new ApiError(400, "INVALID_REDIRECT", "Tujuan redirect tidak valid.");
   return target;
 }
 
@@ -33,9 +41,12 @@ export async function GET(request: Request) {
     if (!config?.redirectUri) throw new ApiError(409, "GOOGLE_NOT_CONFIGURED", "Login Google belum diaktifkan.");
     const home = safeRelativeRedirect(request, "/");
     const params = new URL(request.url).searchParams;
-    if (params.get("error")) throw new ApiError(400, "GOOGLE_CANCELLED", "Login Google dibatalkan.");
     const input = callbackSchema.safeParse({ code: params.get("code") ?? "", state: params.get("state") ?? "" });
-    if (!input.success) throw new ApiError(400, "GOOGLE_CALLBACK_INVALID", "Parameter callback Google tidak valid.");
+    if (!input.success) {
+      const response = NextResponse.redirect(safeRelativeRedirect(request, "/masuk"), 303);
+      clearGoogleCookies(response);
+      return response;
+    }
     const identity = await exchangeGoogleCode(request, input.data.code, input.data.state);
 
     const user = await withTransaction(async (client) => {

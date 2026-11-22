@@ -16,6 +16,12 @@ async function run() {
   assert.equal((await me.json()).user, null);
   const loans = await fetch(`${BASE_URL}/api/loans`);
   assert.equal(loans.status, 401);
+  const googleStart = await fetch(`${BASE_URL}/api/auth/google`);
+  assert.equal(googleStart.status, 200, "Google start route must be reachable");
+  assert.deepEqual(await googleStart.json(), { enabled: false }, "Google login must stay disabled without credentials");
+  const googleCallback = await fetch(`${BASE_URL}/api/auth/google/callback?code=probe&state=probe`, { redirect: "manual" });
+  assert.equal(googleCallback.status, 303, "Google callback failure must redirect to /masuk");
+  assert.match(googleCallback.headers.get("location") ?? "", /\/masuk$/);
   const categories = await fetch(`${BASE_URL}/api/categories`);
   assert.equal(categories.status, 401, "categories API must require a session");
   const createCategory = await fetch(`${BASE_URL}/api/categories`, { method: "POST", headers: { "Origin": BASE_URL, "Content-Type": "application/json" }, body: JSON.stringify({ name: "Unauthorized" }) });

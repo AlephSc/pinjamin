@@ -31,11 +31,15 @@ function requiredEnv(name: string) {
 export function googleOAuthConfig(): GoogleOAuthConfig | null {
   const clientId = requiredEnv("GOOGLE_CLIENT_ID");
   const clientSecret = requiredEnv("GOOGLE_CLIENT_SECRET");
-  if (!clientId || !clientSecret) return null;
+  const redirectUri = requiredEnv("GOOGLE_REDIRECT_URI");
+  if (!clientId || !clientSecret || !redirectUri) return null;
+  if (!/^https:\/\/[^/\s]+\/api\/auth\/google\/callback\/?$/.test(redirectUri)) {
+    throw new ApiError(500, "GOOGLE_REDIRECT_INVALID", "GOOGLE_REDIRECT_URI must be an HTTPS callback URL.");
+  }
   return {
     clientId,
     clientSecret,
-    redirectUri: requiredEnv("GOOGLE_REDIRECT_URI"),
+    redirectUri,
     defaultRole: "peminjam",
   };
 }

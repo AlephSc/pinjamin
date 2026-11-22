@@ -66,7 +66,7 @@ export default function LoginForm({ googleEnabled = false }: { googleEnabled?: b
         {googleEnabled ? <button type="button" className={styles.loginGoogle} onClick={startGoogle} disabled={busy}>
           <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
           Lanjutkan dengan Google
-        </button> : <a className={`${styles.loginGoogle} ${styles.loginGoogleDisabled}`} href="/masuk" aria-disabled="true">
+        </button> : <a className={`${styles.loginGoogle} ${styles.loginGoogleDisabled}`} href="/masuk" onClick={e => e.preventDefault()} aria-disabled="true">
           <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
           Login Google belum aktif
         </a>}
