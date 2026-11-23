@@ -59,22 +59,22 @@ export default function LoginForm({ errorCode }: { errorCode?: string } = {}) {
 
   return <main className={styles.loginShell}>
     <section className={styles.loginAside} aria-label="Tentang Pinjamin">
-      <a className={styles.loginBrand} href="/"><span aria-hidden="true">P</span><span>Pinjamin<small>Inventaris sekolah, lebih tertata.</small></span></a>
+      <a className={styles.loginBrand} href="/"><span aria-hidden="true">P</span><span>Pinjamin<small>Inventaris sekolah yang tertata dan akurat.</small></span></a>
       <div>
-        <h2>Satu ruang kerja untuk seluruh peminjaman alat sekolah.</h2>
-        <p>Dari pengajuan sampai pengembalian, setiap langkah tercatat dan stok tetap akurat.</p>
+        <h2>Satu sistem terpadu untuk mengelola peminjaman peralatan sekolah.</h2>
+        <p>Setiap tahap, mulai dari pengajuan, persetujuan, hingga pengembalian, tercatat secara sistematis sehingga stok tetap akurat.</p>
       </div>
       <ol className={styles.loginSteps}>
-        <li><span aria-hidden="true">1</span>Peminjam mengajukan alat yang tersedia.</li>
-        <li><span aria-hidden="true">2</span>Petugas menyetujui dan mencatat pengembalian.</li>
-        <li><span aria-hidden="true">3</span>Admin memantau laporan dan aktivitas.</li>
+        <li><span aria-hidden="true">1</span>Peminjam mengajukan peralatan yang tersedia.</li>
+        <li><span aria-hidden="true">2</span>Petugas memverifikasi pengajuan dan mencatat pengembalian.</li>
+        <li><span aria-hidden="true">3</span>Administrator memantau laporan dan aktivitas sistem.</li>
       </ol>
     </section>
     <section className={styles.loginMain}>
       <div className={styles.loginCard} aria-labelledby="login-title">
-        <a className={styles.loginBrand} href="/"><span aria-hidden="true">P</span><span>Pinjamin<small>Inventaris sekolah, lebih tertata.</small></span></a>
+        <a className={styles.loginBrand} href="/"><span aria-hidden="true">P</span><span>Pinjamin<small>Inventaris sekolah yang tertata dan akurat.</small></span></a>
         <h1 id="login-title">Masuk ke ruang kerja</h1>
-        <p className={styles.loginLead}>Gunakan akun sekolah Anda. Akses menyesuaikan peran: admin, petugas, atau peminjam.</p>
+        <p className={styles.loginLead}>Gunakan akun sekolah Anda. Hak akses disesuaikan dengan peran: Administrator, Petugas, atau Peminjam.</p>
         <button type="button" className={styles.loginGoogle} onClick={startGoogle} disabled={busy}>
           <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
           Lanjutkan dengan Google
