@@ -18,7 +18,13 @@ async function run() {
   assert.equal(loans.status, 401);
   const googleStart = await fetch(`${BASE_URL}/api/auth/google`);
   assert.equal(googleStart.status, 200, "Google start route must be reachable");
-  assert.deepEqual(await googleStart.json(), { enabled: false }, "Google login must stay disabled without credentials");
+  const googleBody = await googleStart.json();
+  if (googleBody.enabled) {
+    assert.match(googleBody.url ?? "", /^https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth\?/, "Google login URL must point at Google");
+    assert.match(googleBody.url ?? "", /[?&]redirect_uri=https%3A%2F%2F/, "Google login URL must use an HTTPS redirect URI");
+  } else {
+    assert.deepEqual(googleBody, { enabled: false }, "Google login must stay disabled without credentials");
+  }
   const googleCallback = await fetch(`${BASE_URL}/api/auth/google/callback?code=probe&state=probe`, { redirect: "manual" });
   assert.equal(googleCallback.status, 303, "Google callback failure must redirect to /masuk");
   assert.match(googleCallback.headers.get("location") ?? "", /\/masuk$/);

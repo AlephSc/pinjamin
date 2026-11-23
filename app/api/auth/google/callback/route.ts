@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     const token = issueToken(user, Number(user.token_version));
     await recordLog({ id: Number(user.id), name: user.name }, "Masuk dengan Google", user.email);
     const response = NextResponse.redirect(home, 303);
-    const cookie = sessionCookie(token);
+    const cookie = sessionCookie(token, request);
     response.cookies.set(cookie.name, cookie.value, cookie.options);
     clearGoogleCookies(response);
     return response;

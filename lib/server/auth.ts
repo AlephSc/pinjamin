@@ -3,6 +3,7 @@ import type { QueryResultRow } from "pg";
 import type { Role, SessionUser } from "@/lib/types";
 import { query } from "@/lib/server/db";
 import { ApiError } from "./api/errors";
+import { requestOrigin } from "./api/http";
 type Row<T> = T & QueryResultRow;
 type Payload = { id: number; exp: number; v: number };
 export const SESSION_COOKIE = "pinjamin_session";
@@ -22,7 +23,9 @@ export async function getSessionUserFromRequest(request:Request){return userForP
 export async function requireRole(...roles:Role[]):Promise<SessionUser>{const user=await getSessionUser();if(!user)throw new ApiError(401,"SESSION_REQUIRED","Silakan masuk untuk melanjutkan.");if(!roles.includes(user.role))throw new ApiError(403,"FORBIDDEN","Peran Anda tidak diizinkan untuk tindakan ini.");return user;}
 export async function signIn(email:string,password:string):Promise<{token:string;user:SessionUser}>{const r=await query<Row<SessionUser&{password_hash:string|null;token_version:number}>>("select id,name,email,role,active,password_hash,token_version,provider from users where lower(email)=lower($1) limit 1",[email]);const row=r.rows[0];if(!row||!row.active||!ROLES.includes(row.role)||row.provider!=="password"||!row.password_hash||!verifyPassword(password,row.password_hash))throw new ApiError(401,"INVALID_CREDENTIALS","Email atau kata sandi salah.");const user={id:Number(row.id),name:row.name,email:row.email,role:row.role};return{token:issueToken(user,Number(row.token_version)),user};}
 export async function revokeUserSessions(userId:number){await query("update users set token_version=token_version+1 where id=$1",[userId]);}
-export function sessionCookie(token:string){return{name:SESSION_COOKIE,value:token,options:{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax" as const,path:"/",maxAge:MAX_AGE}};}
+const LOCAL_SECURE_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+function secureCookieForRequest(request:Request){const origin=requestOrigin(request);const host=new URL(origin).hostname.toLowerCase();return process.env.NODE_ENV==="production"||LOCAL_SECURE_HOSTS.has(host);}
+export function sessionCookie(token:string,request?:Request){return{name:SESSION_COOKIE,value:token,options:{httpOnly:true,secure:request?secureCookieForRequest(request):process.env.NODE_ENV==="production",sameSite:"lax" as const,path:"/",maxAge:MAX_AGE}};}
 export function validLoginCsrf(request:Request){const cookie=request.headers.get("cookie")?.split(";").map(x=>x.trim()).find(x=>x.startsWith(`${LOGIN_CSRF_COOKIE}=`))?.slice(LOGIN_CSRF_COOKIE.length+1);const header=request.headers.get("x-csrf-token");return !!cookie&&!!header&&cookie.length===header.length&&timingSafeEqual(Buffer.from(cookie),Buffer.from(header));}
 export function csrfCookieValue(){return randomBytes(24).toString("base64url");}
 export { readToken };

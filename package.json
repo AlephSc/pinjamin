@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check": "node db/self-check.mjs && node tests/loan-lifecycle.mjs && node tests/categories-crud.mjs && node tests/migration-return-audit.mjs && node tests/migration-security.mjs && node tests/migration-google-login.mjs && node tests/qa-routes.mjs && tsc --noEmit"
+    "check": "node db/self-check.mjs && node tests/loan-lifecycle.mjs && node tests/categories-crud.mjs && node tests/migration-return-audit.mjs && node tests/migration-security.mjs && node tests/migration-google-login.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/google-oauth-state.mjs && node tests/qa-routes.mjs && tsc --noEmit"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",

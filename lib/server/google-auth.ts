@@ -1,7 +1,8 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import type { NextResponse as NextResponseType } from "next/server";
 import type { Role } from "@/lib/types";
 import { ApiError } from "@/lib/server/api/errors";
+import { readSignedState, sameValue, signedState } from "./oauth-state";
 
 const GOOGLE_AUTH_HOST = "https://accounts.google.com";
 const GOOGLE_API_HOST = "https://oauth2.googleapis.com";
@@ -44,12 +45,6 @@ export function googleOAuthConfig(): GoogleOAuthConfig | null {
   };
 }
 
-function sameValue(left: string, right: string) {
-  const a = Buffer.from(left);
-  const b = Buffer.from(right);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
 const cookieOptions = () => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
@@ -57,27 +52,6 @@ const cookieOptions = () => ({
   path: "/",
   maxAge: COOKIE_MAX_AGE,
 });
-
-function signedState(nonce: string) {
-  const secret = process.env.AUTH_SECRET ?? "";
-  if (secret.length < 32) throw new Error("AUTH_SECRET must be configured for Google login.");
-  const body = Buffer.from(JSON.stringify({ n: nonce, exp: Math.floor(Date.now() / 1000) + COOKIE_MAX_AGE })).toString("base64url");
-  return `${body}.${createHmac("sha256", secret).update(body).digest("base64url")}`;
-}
-
-function readSignedState(value: string | undefined, nonce: string) {
-  if (!value || value.length > 1024) return false;
-  const [body, signature, extra] = value.split(".");
-  if (!body || !signature || extra) return false;
-  const expected = createHmac("sha256", process.env.AUTH_SECRET ?? "").update(body).digest("base64url");
-  if (!sameValue(signature, expected)) return false;
-  try {
-    const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as { n?: string; exp?: number };
-    return payload.n === nonce && Number(payload.exp) > Math.floor(Date.now() / 1000);
-  } catch {
-    return false;
-  }
-}
 
 function normalizeName(value: string | null | undefined) {
   const name = (value ?? "").trim().slice(0, 120);
