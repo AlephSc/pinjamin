@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 process.env.AUTH_SECRET = "test-auth-secret-0123456789abcdef0123456789";
 
@@ -27,4 +28,8 @@ const expiredPayload = Buffer.from(JSON.stringify({ n: nonce, exp: Math.floor(Da
 const expiredSignature = createHmac("sha256", process.env.AUTH_SECRET).update(expiredPayload).digest("base64url");
 assert.equal(readSignedState(`${prefix}.${expiredPayload}.${expiredSignature}`, nonce), false, "expired state must be rejected");
 
-console.log("PASS google oauth state: nonce binding, signature, payload integrity, expiry");
+const googleAuthSource = readFileSync(new URL("../lib/server/google-auth.ts", import.meta.url), "utf8");
+assert.match(googleAuthSource, /openidconnect\.googleapis\.com\/v1\/userinfo/, "userinfo must use the OpenID Connect endpoint");
+assert.doesNotMatch(googleAuthSource, /oauth2\.googleapis\.com\/userinfo/, "the removed 404 userinfo endpoint must not come back");
+
+console.log("PASS google oauth state: nonce binding, signature, payload integrity, expiry, userinfo endpoint");

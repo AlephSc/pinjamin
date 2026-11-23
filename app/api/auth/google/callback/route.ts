@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     const params = new URL(request.url).searchParams;
     const input = callbackSchema.safeParse({ code: params.get("code") ?? "", state: params.get("state") ?? "" });
     if (!input.success) {
-      const response = NextResponse.redirect(safeRelativeRedirect(request, "/masuk"), 303);
+      const response = NextResponse.redirect(safeRelativeRedirect(request, "/masuk?error=GOOGLE_STATE_INVALID"), 303);
       clearGoogleCookies(response);
       return response;
     }
@@ -94,7 +94,9 @@ export async function GET(request: Request) {
     const known = error instanceof ApiError ? error : null;
     if (known) console.error("Google login failed", known.code);
     else console.error("Google login failed", error);
-    const response = NextResponse.redirect(safeRelativeRedirect(request, "/masuk"), 303);
+    const failure = safeRelativeRedirect(request, "/masuk");
+    failure.searchParams.set("error", known?.code ?? "GOOGLE_LOGIN_FAILED");
+    const response = NextResponse.redirect(failure, 303);
     clearGoogleCookies(response);
     return response;
   }

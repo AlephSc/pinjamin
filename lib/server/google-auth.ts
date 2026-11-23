@@ -6,6 +6,7 @@ import { readSignedState, sameValue, signedState } from "./oauth-state";
 
 const GOOGLE_AUTH_HOST = "https://accounts.google.com";
 const GOOGLE_API_HOST = "https://oauth2.googleapis.com";
+const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 const GOOGLE_SCOPES = "openid email profile";
 const STATE_COOKIE = "pinjamin_google_state";
 const PENDING_COOKIE = "pinjamin_google_pending";
@@ -119,7 +120,7 @@ export async function exchangeGoogleCode(request: Request, code: string, state: 
   const token = await tokenResponse.json() as { access_token?: string };
   if (!token.access_token) throw new ApiError(502, "GOOGLE_TOKEN_FAILED", "Google tidak mengembalikan akses token.");
 
-  const profileResponse = await fetch(`${GOOGLE_API_HOST}/userinfo`, {
+  const profileResponse = await fetch(GOOGLE_USERINFO_URL, {
     headers: { Authorization: `Bearer ${token.access_token}` },
     cache: "no-store",
   });

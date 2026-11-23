@@ -27,7 +27,9 @@ async function run() {
   }
   const googleCallback = await fetch(`${BASE_URL}/api/auth/google/callback?code=probe&state=probe`, { redirect: "manual" });
   assert.equal(googleCallback.status, 303, "Google callback failure must redirect to /masuk");
-  assert.match(googleCallback.headers.get("location") ?? "", /\/masuk$/);
+  assert.match(googleCallback.headers.get("location") ?? "", /\/masuk\?error=GOOGLE_STATE_INVALID$/, "Google callback failure must report the error on /masuk");
+  const errorPage = await fetch(`${BASE_URL}/masuk?error=GOOGLE_STATE_INVALID`);
+  assert.match(await errorPage.text(), /Sesi login Google habis/, "login page must show Google failure reason");
   const categories = await fetch(`${BASE_URL}/api/categories`);
   assert.equal(categories.status, 401, "categories API must require a session");
   const createCategory = await fetch(`${BASE_URL}/api/categories`, { method: "POST", headers: { "Origin": BASE_URL, "Content-Type": "application/json" }, body: JSON.stringify({ name: "Unauthorized" }) });

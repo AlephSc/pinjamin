@@ -4,12 +4,24 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import styles from "./PinjaminWorkspace.module.css";
 
-export default function LoginForm() {
+const googleErrorMessages: Record<string, string> = {
+  GOOGLE_STATE_INVALID: "Sesi login Google habis. Silakan coba lagi.",
+  GOOGLE_TOKEN_FAILED: "Google menolak pertukaran kode login. Coba lagi.",
+  GOOGLE_PROFILE_FAILED: "Gagal membaca identitas Google. Coba lagi.",
+  GOOGLE_IDENTITY_INVALID: "Identitas Google tidak lengkap.",
+  GOOGLE_EMAIL_UNVERIFIED: "Email Google ini belum terverifikasi.",
+  GOOGLE_ACCOUNT_DISABLED: "Akun ini tidak aktif.",
+  GOOGLE_ACCOUNT_CONFLICT: "Email Google sudah terdaftar dengan metode lain.",
+  GOOGLE_NOT_CONFIGURED: "Login Google belum diaktifkan.",
+  GOOGLE_LOGIN_FAILED: "Login Google gagal. Coba lagi.",
+};
+
+export default function LoginForm({ errorCode }: { errorCode?: string } = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [csrf, setCsrf] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(errorCode ? googleErrorMessages[errorCode] ?? "Login Google gagal. Coba lagi." : "");
   const [busy, setBusy] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
