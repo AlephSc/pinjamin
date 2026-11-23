@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import styles from "./PinjaminWorkspace.module.css";
 
-export default function LoginForm({ googleEnabled = false }: { googleEnabled?: boolean }) {
+export default function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +34,7 @@ export default function LoginForm({ googleEnabled = false }: { googleEnabled?: b
   }
 
   async function startGoogle() {
-    if (!googleEnabled || busy) return;
+    if (busy) return;
     setBusy(true); setError("");
     try {
       const response = await fetch("/api/auth/google", { cache: "no-store" });
@@ -63,13 +63,10 @@ export default function LoginForm({ googleEnabled = false }: { googleEnabled?: b
         <a className={styles.loginBrand} href="/"><span aria-hidden="true">P</span><span>Pinjamin<small>Inventaris sekolah, lebih tertata.</small></span></a>
         <h1 id="login-title">Masuk ke ruang kerja</h1>
         <p className={styles.loginLead}>Gunakan akun sekolah Anda. Akses menyesuaikan peran: admin, petugas, atau peminjam.</p>
-        {googleEnabled ? <button type="button" className={styles.loginGoogle} onClick={startGoogle} disabled={busy}>
+        <button type="button" className={styles.loginGoogle} onClick={startGoogle} disabled={busy}>
           <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
           Lanjutkan dengan Google
-        </button> : <a className={`${styles.loginGoogle} ${styles.loginGoogleDisabled}`} href="/masuk" onClick={e => e.preventDefault()} aria-disabled="true">
-          <span className={styles.loginGoogleMark} aria-hidden="true">G</span>
-          Login Google belum aktif
-        </a>}
+        </button>
         <div className={styles.loginDivider} aria-hidden="true">atau</div>
         <form className={styles.loginForm} onSubmit={submit}>
           <label>Email sekolah<input type="email" autoComplete="username" placeholder="nama@sekolah.sch.id" value={email} onChange={e => setEmail(e.target.value)} maxLength={254} required /></label>

@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/server/auth";
-import { googleOAuthConfig } from "@/lib/server/google-auth";
 import LoginForm from "@/app/components/LoginForm";
 export const metadata={title:"Masuk",description:"Masuk ke sistem peminjaman alat sekolah."};
 export default async function LoginPage(){
  const user=await getSessionUser(); if(user) redirect(user.role==="admin"?"/admin":user.role==="petugas"?"/petugas":"/");
- return <LoginForm googleEnabled={Boolean(googleOAuthConfig()?.redirectUri)}/>;
+ return <LoginForm/>;
 }
