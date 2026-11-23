@@ -35,11 +35,14 @@ function safeRelativeRedirect(request: Request, path: string) {
   return target;
 }
 
+function homeForRole(request: Request, role: Role) {
+  return safeRelativeRedirect(request, role === "admin" ? "/admin" : role === "petugas" ? "/petugas" : "/");
+}
+
 export async function GET(request: Request) {
   try {
     const config = googleOAuthConfig();
     if (!config?.redirectUri) throw new ApiError(409, "GOOGLE_NOT_CONFIGURED", "Login Google belum diaktifkan.");
-    const home = safeRelativeRedirect(request, "/");
     const params = new URL(request.url).searchParams;
     const input = callbackSchema.safeParse({ code: params.get("code") ?? "", state: params.get("state") ?? "" });
     if (!input.success) {
@@ -82,7 +85,7 @@ export async function GET(request: Request) {
     if (!user?.active || !roles.includes(user.role)) throw new ApiError(403, "GOOGLE_ACCOUNT_DISABLED", "Akun ini tidak aktif.");
     const token = issueToken(user, Number(user.token_version));
     await recordLog({ id: Number(user.id), name: user.name }, "Masuk dengan Google", user.email);
-    const response = NextResponse.redirect(home, 303);
+    const response = NextResponse.redirect(homeForRole(request, user.role), 303);
     const cookie = sessionCookie(token, request);
     response.cookies.set(cookie.name, cookie.value, cookie.options);
     clearGoogleCookies(response);
